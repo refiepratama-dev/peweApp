@@ -4,6 +4,8 @@ import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } fro
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { colors, radius, spacing, typography } from '@/theme';
 
+export type TextFieldRef = ComponentRef<typeof TextInput>;
+
 type TextFieldProps = TextInputProps & {
   label: string;
   error?: string | null;
@@ -11,7 +13,7 @@ type TextFieldProps = TextInputProps & {
   icon?: ReactNode;
   /** Field password: teks disembunyikan + tombol mata */
   secret?: boolean;
-  ref?: Ref<ComponentRef<typeof TextInput>>;
+  ref?: Ref<TextFieldRef>;
 };
 
 // React 19: ref cukup jadi prop biasa (tanpa forwardRef)
