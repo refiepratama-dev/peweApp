@@ -11,6 +11,8 @@ type AuthShellProps = {
   subtitle: string;
   children: ReactNode;
   footer?: ReactNode;
+  /** Teks di kartu hitam (default: tagline Pewe) */
+  heroText?: string;
 };
 
 const enter = (delay: number) => FadeInDown.duration(450).delay(delay).easing(Easing.out(Easing.cubic));
@@ -20,7 +22,7 @@ const enter = (delay: number) => FadeInDown.duration(450).delay(delay).easing(Ea
  * HP portrait: kartu hitam di atas, form di bawah.
  * Tablet / landscape lebar: kartu hitam di kiri, form di kanan.
  */
-export function AuthShell({ title, subtitle, children, footer }: AuthShellProps) {
+export function AuthShell({ title, subtitle, children, footer, heroText }: AuthShellProps) {
   const { width } = useWindowDimensions();
   const wide = width >= 720;
 
@@ -43,7 +45,7 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
                 <View style={styles.heroText}>
                   <Text style={[typography.display, { color: colors.textOnDark }]}>Pewe</Text>
                   <Text style={[typography.body, { color: colors.textOnDarkMuted }]}>
-                    Simpan akun, password & key klien tim kamu, terenkripsi.
+                    {heroText ?? 'Simpan akun, password & key klien tim kamu, terenkripsi.'}
                   </Text>
                 </View>
               </LinearGradient>
