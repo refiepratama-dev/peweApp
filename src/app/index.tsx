@@ -18,7 +18,8 @@ function useSupabaseStatus() {
   useEffect(() => {
     supabase
       .from('workspaces')
-      .select('id', { head: true, count: 'exact' })
+      .select('id')
+      .limit(1)
       .then(({ error }) => {
         if (!error) return setStatus('ok');
         setMessage(error.message);
