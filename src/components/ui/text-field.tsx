@@ -7,7 +7,7 @@ import { colors, radius, spacing, typography } from '@/theme';
 export type TextFieldRef = ComponentRef<typeof TextInput>;
 
 type TextFieldProps = TextInputProps & {
-  label: string;
+  label?: string;
   error?: string | null;
   hint?: string;
   icon?: ReactNode;
@@ -24,8 +24,8 @@ export function TextField({ label, error, hint, icon, secret, style, onFocus, on
 
   return (
     <View style={styles.wrapper}>
-      <Text style={[typography.label, styles.label]}>{label}</Text>
-      <View style={[styles.box, { borderColor }]}>
+      {!!label && <Text style={[typography.label, styles.label]}>{label}</Text>}
+      <View style={[styles.box, rest.multiline && styles.boxMultiline, { borderColor }]}>
         {icon}
         <TextInput
           ref={ref}
@@ -42,7 +42,7 @@ export function TextField({ label, error, hint, icon, secret, style, onFocus, on
             setFocused(false);
             onBlur?.(e);
           }}
-          style={[styles.input, style]}
+          style={[styles.input, rest.multiline && styles.inputMultiline, style]}
           {...rest}
         />
         {secret && (
@@ -91,6 +91,15 @@ const styles = StyleSheet.create({
   // Tinggi native dibuat eksplisit & tanpa lineHeight/padding vertikal.
   // Kalau dibiarkan otomatis, iOS mengukur tinggi kolom dari metrik font kustom
   // sehingga huruf berekor (g, j, p, q, y) terpotong.
+  boxMultiline: { alignItems: 'flex-start' },
+  inputMultiline: {
+    height: undefined,
+    minHeight: 96,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    lineHeight: 22,
+    textAlignVertical: 'top',
+  },
   input: {
     flex: 1,
     height: 48,
