@@ -27,7 +27,8 @@ type VaultContextValue = {
   isOwner: boolean;
   refresh: () => Promise<void>;
   createWorkspace: (name: string, passphrase: string) => Promise<void>;
-  unlock: (passphrase: string) => Promise<void>;
+  /** remember = simpan kunci di HP ini supaya berikutnya cukup biometrik */
+  unlock: (passphrase: string, remember?: boolean) => Promise<void>;
   unlockWithBiometric: () => Promise<boolean>;
   enableBiometric: () => Promise<void>;
   lock: () => void;
@@ -103,10 +104,18 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   );
 
   const unlock = useCallback(
-    async (passphrase: string) => {
+    async (passphrase: string, remember = false) => {
       if (!workspace) return;
       // Melempar WrongPassphraseError kalau passphrase salah
       const key = await vaultCrypto.unlockDataKey(passphrase, workspace.kdf_salt, workspace.wrapped_key);
+      if (remember) {
+        try {
+          await saveDataKey(workspace.id, key);
+          setBiometricEnabled(true);
+        } catch {
+          // Biometrik dibatalkan / gagal → vault tetap dibuka, cukup tidak diingat
+        }
+      }
       setDataKey(key);
       setStatus('unlocked');
     },
