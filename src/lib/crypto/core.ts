@@ -14,8 +14,12 @@ const TEXT_VERSION = 'v1';
 const BYTES_VERSION = 1;
 const KEY_CHECK_PLAINTEXT = 'pewe-key-check';
 
-/** Iterasi default. Disimpan di dalam string salt, jadi bisa dinaikkan kapan saja. */
-export const DEFAULT_ITERATIONS = 150_000;
+/**
+ * Iterasi default PBKDF2. Diukur di HP: 150k ≈ 10 dtk (mode production), jadi diturunkan
+ * ke 60k (± 4 dtk). Keamanan ditopang passphrase panjang (lihat validatePassphrase).
+ * Nilainya disimpan di string kdf_salt, jadi bisa dinaikkan nanti tanpa enkripsi ulang data.
+ */
+export const DEFAULT_ITERATIONS = 60_000;
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
