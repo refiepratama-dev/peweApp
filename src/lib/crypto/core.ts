@@ -43,6 +43,9 @@ export function createVaultCrypto(randomBytes: RandomBytes) {
     return pbkdf2Async(sha256, encoder.encode(passphrase.normalize('NFKC')), base64.decode(saltB64), {
       c: iterations,
       dkLen: KEY_LENGTH,
+      // Di React Native tiap jeda (setTimeout) bisa makan ±1 frame. Default noble 10 ms
+      // membuat proses 2–3x lebih lambat; 200 ms tetap responsif untuk layar loading.
+      asyncTick: 200,
     });
   }
 
