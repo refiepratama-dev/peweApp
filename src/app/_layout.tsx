@@ -43,9 +43,9 @@ export default function RootLayout() {
   );
 }
 
-// Arahkan otomatis: belum login → (auth), sudah login → (app)
+// Pengalihan login/belum login diatur di _layout masing-masing grup: (app) dan (auth)
 function RootNavigator() {
-  const { session, loading } = useAuth();
+  const { loading } = useAuth();
 
   useEffect(() => {
     if (!loading) SplashScreen.hideAsync();
@@ -62,14 +62,7 @@ function RootNavigator() {
           contentStyle: { backgroundColor: colors.bg },
           animation: 'fade',
         }}
-      >
-        <Stack.Protected guard={!!session}>
-          <Stack.Screen name="(app)" />
-        </Stack.Protected>
-        <Stack.Protected guard={!session}>
-          <Stack.Screen name="(auth)" />
-        </Stack.Protected>
-      </Stack>
+      />
     </>
   );
 }
