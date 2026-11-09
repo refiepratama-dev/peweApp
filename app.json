@@ -1,14 +1,15 @@
 {
   "expo": {
-    "name": "pewe-App",
-    "slug": "pewe-App",
+    "name": "PEWE",
+    "slug": "pewe",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
-    "scheme": "peweapp",
-    "userInterfaceStyle": "automatic",
+    "scheme": "pewe",
+    "userInterfaceStyle": "light",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
