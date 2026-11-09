@@ -41,18 +41,20 @@ export default function Index() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
-  container: { padding: spacing.xl, gap: spacing.lg },
+  container: { padding: spacing.lg, gap: spacing.lg },
   ink: { color: colors.textPrimary },
   darkCard: {
     borderRadius: radius.lg,
-    padding: spacing.xl,
-    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
+    gap: spacing.xs,
     marginTop: spacing.sm,
   },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
-    padding: spacing.xl,
-    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
+    gap: spacing.sm,
   },
 });
