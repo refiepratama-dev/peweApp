@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { validatePassphrase } from '../src/lib/crypto/passphrase.ts';
 import { createVaultCrypto, DecryptError, WrongPassphraseError } from '../src/lib/crypto/core.ts';
 
 const c = createVaultCrypto((n) => new Uint8Array(randomBytes(n)));
@@ -38,3 +39,10 @@ const rew = await c.rewrapDataKey(key, 'passphrase baru tim 99');
 const reopened = await c.unlockDataKey('passphrase baru tim 99', rew.kdfSalt, rew.wrappedKey);
 assert(c.decryptText(reopened, enc) === 'Password DB: p@ss 🔑', 'ganti passphrase → data lama tetap terbuka');
 assert(await throws(() => c.unlockDataKey('rahasia tim pewe 2026', rew.kdfSalt, rew.wrappedKey), WrongPassphraseError), 'passphrase lama ditolak setelah diganti');
+
+// Aturan passphrase
+assert(!validatePassphrase('pendek1').ok, 'passphrase < 12 karakter ditolak');
+assert(!validatePassphrase('aaaaaaaaaaaa1').ok, 'passphrase berulang ditolak');
+assert(!validatePassphrase('hanyahurufsaja').ok, 'satu jenis karakter & 1 kata ditolak');
+assert(validatePassphrase('kopi pagi palembang').ok, 'kalimat 3 kata diterima');
+assert(validatePassphrase('Pewe-Tim#2026').ok, 'campuran huruf/angka/simbol diterima');
