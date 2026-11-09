@@ -12,7 +12,6 @@ const NONCE_LENGTH = 12; // standar GCM
 const SALT_LENGTH = 16;
 const TEXT_VERSION = 'v1';
 const BYTES_VERSION = 1;
-const KEY_CHECK_PLAINTEXT = 'pewe-key-check';
 
 /**
  * Iterasi default PBKDF2. Diukur di HP: 150k ≈ 10 dtk (mode production), jadi diturunkan
@@ -28,6 +27,13 @@ export class DecryptError extends Error {
   constructor(message = 'Gagal membuka data: passphrase salah atau data rusak') {
     super(message);
     this.name = 'DecryptError';
+  }
+}
+
+export class WrongPassphraseError extends DecryptError {
+  constructor() {
+    super('Passphrase salah');
+    this.name = 'WrongPassphraseError';
   }
 }
 
@@ -92,18 +98,41 @@ export function createVaultCrypto(randomBytes: RandomBytes) {
     }
   }
 
-  /** Dibuat sekali saat workspace dibuat → disimpan di kolom key_check. */
-  function createKeyCheck(key: Uint8Array): string {
-    return encryptText(key, KEY_CHECK_PLAINTEXT);
+  // ---------- KEY WRAPPING ----------
+  // Data dienkripsi dengan "data key" acak (DEK). DEK dibungkus (wrap) memakai kunci dari
+  // passphrase tim (KEK), lalu hasilnya disimpan di kolom workspaces.wrapped_key.
+  // Untung-nya: ganti passphrase / naikkan iterasi cukup bungkus ulang DEK,
+  // tanpa harus enkripsi ulang semua field, gambar & PDF.
+
+  function wrapKey(kek: Uint8Array, dataKey: Uint8Array): string {
+    return encryptText(kek, base64.encode(dataKey));
   }
 
-  /** true kalau passphrase yang dimasukkan benar. */
-  function verifyKeyCheck(key: Uint8Array, keyCheck: string): boolean {
+  /** Dipakai saat membuat workspace baru. Simpan kdfSalt + wrappedKey ke tabel workspaces. */
+  async function createWorkspaceKeys(passphrase: string) {
+    const kdfSalt = createKdfSalt();
+    const kek = await deriveKey(passphrase, kdfSalt);
+    const dataKey = randomBytes(KEY_LENGTH);
+    return { kdfSalt, wrappedKey: wrapKey(kek, dataKey), dataKey };
+  }
+
+  /** Buka vault: passphrase → DEK. Melempar WrongPassphraseError kalau passphrase salah. */
+  async function unlockDataKey(passphrase: string, kdfSalt: string, wrappedKey: string): Promise<Uint8Array> {
+    const kek = await deriveKey(passphrase, kdfSalt);
     try {
-      return decryptText(key, keyCheck) === KEY_CHECK_PLAINTEXT;
+      const dataKey = base64.decode(decryptText(kek, wrappedKey));
+      if (dataKey.length !== KEY_LENGTH) throw new Error('panjang kunci salah');
+      return dataKey;
     } catch {
-      return false;
+      throw new WrongPassphraseError();
     }
+  }
+
+  /** Ganti passphrase tim (mis. ada anggota keluar). Data lama tetap bisa dibuka. */
+  async function rewrapDataKey(dataKey: Uint8Array, newPassphrase: string, iterations = DEFAULT_ITERATIONS) {
+    const kdfSalt = createKdfSalt(iterations);
+    const kek = await deriveKey(newPassphrase, kdfSalt);
+    return { kdfSalt, wrappedKey: wrapKey(kek, dataKey) };
   }
 
   return {
@@ -113,8 +142,9 @@ export function createVaultCrypto(randomBytes: RandomBytes) {
     decryptText,
     encryptBytes,
     decryptBytes,
-    createKeyCheck,
-    verifyKeyCheck,
+    createWorkspaceKeys,
+    unlockDataKey,
+    rewrapDataKey,
   };
 }
 

@@ -38,16 +38,18 @@ function useCryptoSelfTest() {
     setRunning(true);
     setResult(null);
     try {
-      const salt = vaultCrypto.createKdfSalt();
+      const passphrase = 'passphrase uji tim';
+      const ws = await vaultCrypto.createWorkspaceKeys(passphrase);
+      // Yang diukur: buka vault (sama dengan yang dialami user saat unlock)
       const start = Date.now();
-      const key = await vaultCrypto.deriveKey('passphrase-uji', salt);
+      const key = await vaultCrypto.unlockDataKey(passphrase, ws.kdfSalt, ws.wrappedKey);
       const deriveMs = Date.now() - start;
       const secret = 'Password DB: p@ss 🔑';
       const roundTrip = vaultCrypto.decryptText(key, vaultCrypto.encryptText(key, secret)) === secret;
-      const check = vaultCrypto.verifyKeyCheck(key, vaultCrypto.createKeyCheck(key));
+      const check = key.every((b, i) => b === ws.dataKey[i]);
       setResult(
         roundTrip && check
-          ? `Enkripsi OK · turunkan kunci ${(deriveMs / 1000).toFixed(1)} dtk`
+          ? `Enkripsi OK · buka vault ${(deriveMs / 1000).toFixed(1)} dtk`
           : 'Enkripsi GAGAL',
       );
     } catch (e) {
