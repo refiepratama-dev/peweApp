@@ -12,16 +12,17 @@ type ButtonProps = {
   disabled?: boolean;
   icon?: ReactNode;
   style?: ViewStyle;
+  textColor?: string;
 };
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 // Gaya Emil Kowalski: tekan → mengecil cepat (0.97), lepas → kembali dengan spring halus.
-export function Button({ title, onPress, variant = 'primary', loading, disabled, icon, style }: ButtonProps) {
+export function Button({ title, onPress, variant = 'primary', loading, disabled, icon, style, textColor: customTextColor }: ButtonProps) {
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   const inactive = disabled || loading;
-  const textColor = variant === 'primary' ? colors.textOnDark : colors.textPrimary;
+  const textColor = customTextColor ?? (variant === 'primary' ? colors.textOnDark : colors.textPrimary);
 
   return (
     <AnimatedPressable

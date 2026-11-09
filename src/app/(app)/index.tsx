@@ -1,10 +1,13 @@
 // Beranda sementara: info tim + kunci vault. Daftar entry (CRUD) menyusul di tahap berikutnya.
 import { LinearGradient } from 'expo-linear-gradient';
-import { Fingerprint, Lock, LogOut } from 'lucide-react-native';
+import { router } from 'expo-router';
+import { ChevronRight, Fingerprint, Lock, LogOut, Tag } from 'lucide-react-native';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/button';
+import { useCategories } from '@/features/categories/categories-provider';
+import { CategoryIcon } from '@/features/categories/icons';
 import { useAuth } from '@/lib/auth/auth-provider';
 import { useVault } from '@/lib/vault/vault-provider';
 import { colors, gradients, radius, shadow, spacing, typography } from '@/theme';
@@ -29,6 +32,7 @@ export default function Home() {
   const { session } = useAuth();
   const { workspace, isOwner, lock, signOutAndForget, biometricAvailable, biometricEnabled, enableBiometric } =
     useVault();
+  const { categories } = useCategories();
   const name = (session?.user.user_metadata?.full_name as string | undefined) ?? session?.user.email ?? '';
 
   async function handleEnableBiometric() {
@@ -89,7 +93,38 @@ export default function Home() {
           </Animated.View>
         )}
 
-        <Animated.View entering={enter(180)} style={[styles.card, styles.empty]}>
+        <Animated.View entering={enter(150)}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/categories')}
+            style={({ pressed }) => [styles.card, shadow.soft, pressed && { opacity: 0.8 }]}
+          >
+            <View style={styles.cardHeader}>
+              <Tag size={18} color={colors.textPrimary} />
+              <Text style={[typography.subheading, { color: colors.textPrimary, flex: 1 }]}>Kategori</Text>
+              <Text style={[typography.caption, { color: colors.textSecondary }]}>{categories.length}</Text>
+              <ChevronRight size={20} color={colors.textMuted} />
+            </View>
+            {categories.length > 0 ? (
+              <View style={styles.chips}>
+                {categories.slice(0, 6).map((c) => (
+                  <View key={c.id} style={styles.chip}>
+                    <CategoryIcon icon={c.icon} color={c.color} size={24} />
+                    <Text style={[typography.label, { color: colors.textPrimary }]} numberOfLines={1}>
+                      {c.name}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text style={[typography.caption, { color: colors.textSecondary }]}>
+                Kelompokkan akun klien, mis. Hosting, Database, Sosial Media.
+              </Text>
+            )}
+          </Pressable>
+        </Animated.View>
+
+        <Animated.View entering={enter(210)} style={[styles.card, styles.empty]}>
           <Text style={[typography.subheading, { color: colors.textPrimary }]}>Vault masih kosong</Text>
           <Text style={[typography.caption, { color: colors.textSecondary, textAlign: 'center' }]}>
             Daftar klien & akun akan muncul di sini.
@@ -122,5 +157,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.14)',
   },
   card: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs + 2,
+    paddingRight: spacing.sm + 2,
+    paddingLeft: 4,
+    paddingVertical: 4,
+    borderRadius: radius.sm,
+    backgroundColor: colors.surfaceAlt,
+    maxWidth: '100%',
+  },
   empty: { alignItems: 'center', paddingVertical: spacing.xxl, borderWidth: 1, borderColor: colors.border, borderStyle: 'dashed', backgroundColor: 'transparent' },
 });
