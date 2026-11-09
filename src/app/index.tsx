@@ -1,98 +1,58 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
+// src/app/index.tsx
+// Layar sementara untuk cek font, warna & gradient. Nanti diganti layar Home.
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { colors, gradients, radius, shadow, spacing, typography } from '@/theme';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+export default function Index() {
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+    <SafeAreaView style={styles.safe}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={[typography.body, { color: colors.textSecondary }]}>Hello</Text>
+        <Text style={[typography.display, { color: colors.textPrimary }]}>Refie</Text>
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+        {/* Kartu gradient hitam */}
+        <LinearGradient
+          colors={gradients.card.colors}
+          start={gradients.card.start}
+          end={gradients.card.end}
+          style={[styles.darkCard, shadow.strong]}
+        >
+          <Text style={[typography.label, { color: colors.textOnDarkMuted }]}>KLIEN</Text>
+          <Text style={[typography.heading, { color: colors.textOnDark }]}>Toko Budi</Text>
+          <Text style={[typography.bodyMedium, { color: colors.textOnDark }]}>•••• •••• 8160</Text>
+        </LinearGradient>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+        {/* Kartu putih + contoh skala tipografi */}
+        <View style={[styles.card, shadow.soft]}>
+          <Text style={[typography.heading, styles.ink]}>Heading — Sora 24</Text>
+          <Text style={[typography.subheading, styles.ink]}>Subheading — Sora 18</Text>
+          <Text style={[typography.title, styles.ink]}>Title — Jakarta 16</Text>
+          <Text style={[typography.body, styles.ink]}>Body — Jakarta Regular 15</Text>
+          <Text style={[typography.bodyMedium, styles.ink]}>Body Medium — Jakarta 15</Text>
+          <Text style={[typography.caption, { color: colors.textSecondary }]}>Caption — 13</Text>
+          <Text style={[typography.label, { color: colors.textMuted }]}>LABEL — 12</Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+  safe: { flex: 1, backgroundColor: colors.bg },
+  container: { padding: spacing.xl, gap: spacing.lg },
+  ink: { color: colors.textPrimary },
+  darkCard: {
+    borderRadius: radius.lg,
+    padding: spacing.xl,
+    gap: spacing.sm,
+    marginTop: spacing.sm,
   },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.xl,
+    gap: spacing.md,
   },
 });
