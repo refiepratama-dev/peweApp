@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { LogOut } from 'lucide-react-native';
+import { useAuth } from '@/lib/auth/auth-provider';
 import { vaultCrypto } from '@/lib/crypto';
 import { supabase } from '@/lib/supabase';
 import { colors, gradients, radius, shadow, spacing, typography } from '@/theme';
@@ -71,6 +73,8 @@ const statusText: Record<Status, string> = {
 };
 
 export default function Index() {
+  const { session, signOut } = useAuth();
+  const name = (session?.user.user_metadata?.full_name as string | undefined) ?? session?.user.email ?? '';
   const { status, message } = useSupabaseStatus();
   const cryptoTest = useCryptoSelfTest();
   const dotColor =
@@ -79,8 +83,23 @@ export default function Index() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={[typography.body, { color: colors.textSecondary }]}>Hello</Text>
-        <Text style={[typography.display, { color: colors.textPrimary }]}>Refie</Text>
+        <View style={styles.header}>
+          <View style={{ flex: 1 }}>
+            <Text style={[typography.body, { color: colors.textSecondary }]}>Hello</Text>
+            <Text style={[typography.display, { color: colors.textPrimary }]} numberOfLines={1}>
+              {name}
+            </Text>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Keluar"
+            hitSlop={8}
+            onPress={signOut}
+            style={({ pressed }) => [styles.iconButton, shadow.soft, pressed && { opacity: 0.6 }]}
+          >
+            <LogOut size={20} color={colors.textPrimary} />
+          </Pressable>
+        </View>
 
         {/* Status koneksi Supabase */}
         <View style={[styles.status, shadow.soft]}>
@@ -156,6 +175,15 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
+  },
+  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  iconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.full,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   button: {
     backgroundColor: colors.ink,

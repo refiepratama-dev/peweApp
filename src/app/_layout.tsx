@@ -16,6 +16,7 @@ import {
   PlusJakartaSans_600SemiBold,
   PlusJakartaSans_700Bold,
 } from '@expo-google-fonts/plus-jakarta-sans';
+import { AuthProvider, useAuth } from '@/lib/auth/auth-provider';
 import { colors } from '@/theme';
 
 // Tahan splash screen sampai font selesai dimuat
@@ -33,11 +34,24 @@ export default function RootLayout() {
     PlusJakartaSans_700Bold,
   });
 
-  useEffect(() => {
-    if (fontsLoaded || fontError) SplashScreen.hideAsync();
-  }, [fontsLoaded, fontError]);
-
   if (!fontsLoaded && !fontError) return null;
+
+  return (
+    <AuthProvider>
+      <RootNavigator />
+    </AuthProvider>
+  );
+}
+
+// Arahkan otomatis: belum login → (auth), sudah login → (app)
+function RootNavigator() {
+  const { session, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading) SplashScreen.hideAsync();
+  }, [loading]);
+
+  if (loading) return null;
 
   return (
     <>
@@ -46,9 +60,16 @@ export default function RootLayout() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: colors.bg },
-          animation: 'ios_from_right',
+          animation: 'fade',
         }}
-      />
+      >
+        <Stack.Protected guard={!!session}>
+          <Stack.Screen name="(app)" />
+        </Stack.Protected>
+        <Stack.Protected guard={!session}>
+          <Stack.Screen name="(auth)" />
+        </Stack.Protected>
+      </Stack>
     </>
   );
 }
