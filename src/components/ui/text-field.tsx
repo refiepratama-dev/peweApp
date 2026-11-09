@@ -42,7 +42,7 @@ export function TextField({ label, error, hint, icon, secret, style, onFocus, on
             setFocused(false);
             onBlur?.(e);
           }}
-          style={[typography.body, styles.input, style]}
+          style={[styles.input, style]}
           {...rest}
         />
         {secret && (
@@ -88,5 +88,15 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     backgroundColor: colors.surfaceAlt,
   },
-  input: { flex: 1, color: colors.textPrimary, paddingVertical: spacing.md },
+  // Tanpa lineHeight: di TextInput, lineHeight dari token tipografi memotong huruf
+  // berekor (g, j, p, q, y). Tinggi kotak dijaga minHeight di `box`.
+  input: {
+    flex: 1,
+    fontFamily: typography.body.fontFamily,
+    fontSize: typography.body.fontSize,
+    color: colors.textPrimary,
+    paddingVertical: spacing.sm,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
+  },
 });
