@@ -1,10 +1,26 @@
 // Simpan data key (DEK) di Keychain / Keystore, dikunci biometrik.
 // Jadi passphrase cukup diketik sekali per HP; berikutnya buka vault pakai sidik jari / Face ID.
 import { base64 } from '@scure/base';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 
 const PROMPT = 'Buka vault Pewe';
+
+/**
+ * Expo Go (iOS) tidak punya izin Face ID untuk SecureStore `requireAuthentication`.
+ * Di Expo Go: kunci disimpan di Keychain biasa (hanya di HP ini) dan dibuka setelah
+ * LocalAuthentication sukses. Di APK / build asli: Keychain/Keystore yang mewajibkan biometrik.
+ */
+const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+
+async function authenticate(): Promise<boolean> {
+  const result = await LocalAuthentication.authenticateAsync({
+    promptMessage: PROMPT,
+    cancelLabel: 'Batal',
+  });
+  return result.success;
+}
 
 // Key SecureStore hanya boleh huruf, angka, ".", "-", "_"
 const dekKey = (workspaceId: string) => `pewe_dek_${workspaceId.replace(/[^a-zA-Z0-9]/g, '')}`;
@@ -25,11 +41,18 @@ export async function isBiometricEnabled(workspaceId: string): Promise<boolean> 
 }
 
 export async function saveDataKey(workspaceId: string, dataKey: Uint8Array): Promise<void> {
-  await SecureStore.setItemAsync(dekKey(workspaceId), base64.encode(dataKey), {
-    requireAuthentication: true,
-    authenticationPrompt: PROMPT,
-    keychainAccessible: SecureStore.WHEN_PASSCODE_SET_THIS_DEVICE_ONLY,
-  });
+  if (isExpoGo) {
+    if (!(await authenticate())) throw new Error('Verifikasi biometrik dibatalkan');
+    await SecureStore.setItemAsync(dekKey(workspaceId), base64.encode(dataKey), {
+      keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+    });
+  } else {
+    await SecureStore.setItemAsync(dekKey(workspaceId), base64.encode(dataKey), {
+      requireAuthentication: true,
+      authenticationPrompt: PROMPT,
+      keychainAccessible: SecureStore.WHEN_PASSCODE_SET_THIS_DEVICE_ONLY,
+    });
+  }
   await SecureStore.setItemAsync(flagKey(workspaceId), '1');
 }
 
@@ -39,10 +62,11 @@ export async function saveDataKey(workspaceId: string, dataKey: Uint8Array): Pro
  */
 export async function loadDataKey(workspaceId: string): Promise<Uint8Array | null> {
   try {
-    const value = await SecureStore.getItemAsync(dekKey(workspaceId), {
-      requireAuthentication: true,
-      authenticationPrompt: PROMPT,
-    });
+    if (isExpoGo && !(await authenticate())) return null;
+    const value = await SecureStore.getItemAsync(
+      dekKey(workspaceId),
+      isExpoGo ? undefined : { requireAuthentication: true, authenticationPrompt: PROMPT },
+    );
     if (!value) {
       // Kunci di-invalidate sistem → matikan flag supaya user diminta passphrase lagi
       await SecureStore.deleteItemAsync(flagKey(workspaceId));

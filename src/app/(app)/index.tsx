@@ -1,7 +1,7 @@
 // Beranda sementara: info tim + kunci vault. Daftar entry (CRUD) menyusul di tahap berikutnya.
 import { LinearGradient } from 'expo-linear-gradient';
 import { Fingerprint, Lock, LogOut } from 'lucide-react-native';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,14 @@ export default function Home() {
   const { workspace, isOwner, lock, signOutAndForget, biometricAvailable, biometricEnabled, enableBiometric } =
     useVault();
   const name = (session?.user.user_metadata?.full_name as string | undefined) ?? session?.user.email ?? '';
+
+  async function handleEnableBiometric() {
+    try {
+      await enableBiometric();
+    } catch (e) {
+      Alert.alert('Biometrik belum aktif', e instanceof Error ? e.message : 'Coba lagi');
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -75,7 +83,7 @@ export default function Home() {
             <Button
               title="Aktifkan biometrik"
               variant="secondary"
-              onPress={enableBiometric}
+              onPress={handleEnableBiometric}
               icon={<Fingerprint size={18} color={colors.textPrimary} />}
             />
           </Animated.View>
