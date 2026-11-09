@@ -1,9 +1,10 @@
 // src/app/index.tsx
 // Layar sementara untuk cek font, warna & gradient. Nanti diganti layar Home.
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { vaultCrypto } from '@/lib/crypto';
 import { supabase } from '@/lib/supabase';
 import { colors, gradients, radius, shadow, spacing, typography } from '@/theme';
 
@@ -28,6 +29,37 @@ function useSupabaseStatus() {
   return { status, message };
 }
 
+// Tes enkripsi di HP: ukur lama turunkan kunci + cek enkripsi/dekripsi
+function useCryptoSelfTest() {
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  async function run() {
+    setRunning(true);
+    setResult(null);
+    try {
+      const salt = vaultCrypto.createKdfSalt();
+      const start = Date.now();
+      const key = await vaultCrypto.deriveKey('passphrase-uji', salt);
+      const deriveMs = Date.now() - start;
+      const secret = 'Password DB: p@ss 🔑';
+      const roundTrip = vaultCrypto.decryptText(key, vaultCrypto.encryptText(key, secret)) === secret;
+      const check = vaultCrypto.verifyKeyCheck(key, vaultCrypto.createKeyCheck(key));
+      setResult(
+        roundTrip && check
+          ? `Enkripsi OK · turunkan kunci ${(deriveMs / 1000).toFixed(1)} dtk`
+          : 'Enkripsi GAGAL',
+      );
+    } catch (e) {
+      setResult(`Error: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  return { running, result, run };
+}
+
 const statusText: Record<Status, string> = {
   checking: 'Mengecek koneksi Supabase…',
   ok: 'Supabase terhubung, schema siap',
@@ -37,6 +69,7 @@ const statusText: Record<Status, string> = {
 
 export default function Index() {
   const { status, message } = useSupabaseStatus();
+  const cryptoTest = useCryptoSelfTest();
   const dotColor =
     status === 'ok' ? colors.success : status === 'checking' ? colors.textMuted : colors.danger;
 
@@ -55,6 +88,23 @@ export default function Index() {
               <Text style={[typography.caption, { color: colors.textSecondary }]}>{message}</Text>
             )}
           </View>
+        </View>
+
+        {/* Tes enkripsi */}
+        <View style={[styles.status, shadow.soft]}>
+          <View style={{ flex: 1 }}>
+            <Text style={[typography.bodyMedium, styles.ink]}>Tes enkripsi AES-GCM</Text>
+            <Text style={[typography.caption, { color: colors.textSecondary }]}>
+              {cryptoTest.running ? 'Menurunkan kunci…' : (cryptoTest.result ?? 'Belum dites')}
+            </Text>
+          </View>
+          <Pressable
+            onPress={cryptoTest.run}
+            disabled={cryptoTest.running}
+            style={({ pressed }) => [styles.button, (pressed || cryptoTest.running) && { opacity: 0.6 }]}
+          >
+            <Text style={[typography.label, { color: colors.textOnDark }]}>Tes</Text>
+          </Pressable>
         </View>
 
         {/* Kartu gradient hitam */}
@@ -103,6 +153,12 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
+  },
+  button: {
+    backgroundColor: colors.ink,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
   },
   dot: { width: 10, height: 10, borderRadius: radius.full },
   card: {
