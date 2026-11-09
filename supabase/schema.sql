@@ -10,7 +10,7 @@ create table public.workspaces (
   id          uuid primary key default gen_random_uuid(),
   name        text not null,
   kdf_salt    text not null,          -- salt untuk menurunkan kunci dari passphrase
-  key_check   text not null,          -- teks contoh terenkripsi, untuk cek passphrase benar/salah
+  wrapped_key text not null,          -- data key (DEK) terbungkus kunci dari passphrase tim
   created_by  uuid not null default auth.uid() references auth.users(id),
   created_at  timestamptz not null default now()
 );
