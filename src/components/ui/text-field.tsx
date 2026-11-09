@@ -88,14 +88,16 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     backgroundColor: colors.surfaceAlt,
   },
-  // Tanpa lineHeight: di TextInput, lineHeight dari token tipografi memotong huruf
-  // berekor (g, j, p, q, y). Tinggi kotak dijaga minHeight di `box`.
+  // Tinggi native dibuat eksplisit & tanpa lineHeight/padding vertikal.
+  // Kalau dibiarkan otomatis, iOS mengukur tinggi kolom dari metrik font kustom
+  // sehingga huruf berekor (g, j, p, q, y) terpotong.
   input: {
     flex: 1,
+    height: 48,
+    paddingVertical: 0,
     fontFamily: typography.body.fontFamily,
     fontSize: typography.body.fontSize,
     color: colors.textPrimary,
-    paddingVertical: spacing.sm,
     includeFontPadding: false,
     textAlignVertical: 'center',
   },

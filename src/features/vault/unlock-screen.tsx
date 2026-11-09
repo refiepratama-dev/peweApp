@@ -5,6 +5,7 @@ import { AuthShell } from '@/components/auth-shell';
 import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/ui/text-field';
 import { WrongPassphraseError } from '@/lib/crypto';
+import { isHardwareBiometric } from '@/lib/vault/key-storage';
 import { useVault } from '@/lib/vault/vault-provider';
 import { colors, radius, spacing, typography } from '@/theme';
 
@@ -17,9 +18,14 @@ export function UnlockScreen() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Langsung tampilkan prompt sidik jari / Face ID kalau sudah diaktifkan
+  // Langsung tampilkan prompt Face ID / sidik jari, tapi hanya untuk biometrik asli.
+  // Mode cadangan (mis. Expo Go → kode sandi HP) tidak dimunculkan otomatis supaya
+  // keyboard PIN tidak tiba-tiba muncul; user cukup tap tombolnya.
   useEffect(() => {
-    if (biometricEnabled) unlockWithBiometric();
+    if (!biometricEnabled || !workspace) return;
+    isHardwareBiometric(workspace.id).then((hw) => {
+      if (hw) unlockWithBiometric();
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

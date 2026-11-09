@@ -52,6 +52,11 @@ export async function canUseBiometric(): Promise<boolean> {
   }
 }
 
+/** true kalau HP ini menyimpan kunci dengan biometrik level sistem (Face ID / sidik jari asli) */
+export async function isHardwareBiometric(workspaceId: string): Promise<boolean> {
+  return (await getMode(workspaceId)) === 'hw';
+}
+
 /** Apakah biometrik sudah diaktifkan untuk workspace ini di HP ini (tanpa memicu prompt) */
 export async function isBiometricEnabled(workspaceId: string): Promise<boolean> {
   return (await getMode(workspaceId)) !== null;
