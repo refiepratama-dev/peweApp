@@ -1,5 +1,5 @@
 // src/theme/index.ts
-// Design tokens PEWE — monokrom hitam/putih + gradient, font Sora + Plus Jakarta Sans
+// Design tokens Pewe — monokrom hitam/putih + gradient, font Sora + Plus Jakarta Sans
 
 import { Platform, TextStyle, ViewStyle } from 'react-native';
 
