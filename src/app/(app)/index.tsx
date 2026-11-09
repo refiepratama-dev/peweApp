@@ -1,156 +1,92 @@
-// src/app/index.tsx
-// Layar sementara untuk cek font, warna & gradient. Nanti diganti layar Home.
-import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+// Beranda sementara: info tim + kunci vault. Daftar entry (CRUD) menyusul di tahap berikutnya.
 import { LinearGradient } from 'expo-linear-gradient';
-import { LogOut } from 'lucide-react-native';
+import { Fingerprint, Lock, LogOut } from 'lucide-react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { Easing, FadeInDown } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth/auth-provider';
-import { vaultCrypto } from '@/lib/crypto';
-import { supabase } from '@/lib/supabase';
+import { useVault } from '@/lib/vault/vault-provider';
 import { colors, gradients, radius, shadow, spacing, typography } from '@/theme';
 
-type Status = 'checking' | 'ok' | 'no-schema' | 'error';
+const enter = (delay: number) => FadeInDown.duration(400).delay(delay).easing(Easing.out(Easing.cubic));
 
-// Cek koneksi Supabase + apakah schema.sql sudah di-run
-function useSupabaseStatus() {
-  const [status, setStatus] = useState<Status>('checking');
-  const [message, setMessage] = useState('');
-
-  useEffect(() => {
-    supabase
-      .from('workspaces')
-      .select('id')
-      .limit(1)
-      .then(({ error }) => {
-        if (!error) return setStatus('ok');
-        setMessage(error.message);
-        setStatus(error.code === 'PGRST205' || error.code === '42P01' ? 'no-schema' : 'error');
-      });
-  }, []);
-
-  return { status, message };
+function IconButton({ label, onPress, children }: { label: string; onPress: () => void; children: React.ReactNode }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      hitSlop={8}
+      onPress={onPress}
+      style={({ pressed }) => [styles.iconButton, shadow.soft, pressed && { opacity: 0.6 }]}
+    >
+      {children}
+    </Pressable>
+  );
 }
 
-// Tes enkripsi di HP: ukur lama turunkan kunci + cek enkripsi/dekripsi
-function useCryptoSelfTest() {
-  const [running, setRunning] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
-
-  async function run() {
-    setRunning(true);
-    setResult(null);
-    try {
-      const passphrase = 'passphrase uji tim';
-      const ws = await vaultCrypto.createWorkspaceKeys(passphrase);
-      // Yang diukur: buka vault (sama dengan yang dialami user saat unlock)
-      const start = Date.now();
-      const key = await vaultCrypto.unlockDataKey(passphrase, ws.kdfSalt, ws.wrappedKey);
-      const deriveMs = Date.now() - start;
-      const secret = 'Password DB: p@ss 🔑';
-      const roundTrip = vaultCrypto.decryptText(key, vaultCrypto.encryptText(key, secret)) === secret;
-      const check = key.every((b, i) => b === ws.dataKey[i]);
-      setResult(
-        roundTrip && check
-          ? `Enkripsi OK · buka vault ${(deriveMs / 1000).toFixed(1)} dtk`
-          : 'Enkripsi GAGAL',
-      );
-    } catch (e) {
-      setResult(`Error: ${e instanceof Error ? e.message : String(e)}`);
-    } finally {
-      setRunning(false);
-    }
-  }
-
-  return { running, result, run };
-}
-
-const statusText: Record<Status, string> = {
-  checking: 'Mengecek koneksi Supabase…',
-  ok: 'Supabase terhubung, schema siap',
-  'no-schema': 'Terhubung, tapi schema.sql belum di-run',
-  error: 'Gagal terhubung ke Supabase',
-};
-
-export default function Index() {
-  const { session, signOut } = useAuth();
+export default function Home() {
+  const { session } = useAuth();
+  const { workspace, isOwner, lock, signOutAndForget, biometricAvailable, biometricEnabled, enableBiometric } =
+    useVault();
   const name = (session?.user.user_metadata?.full_name as string | undefined) ?? session?.user.email ?? '';
-  const { status, message } = useSupabaseStatus();
-  const cryptoTest = useCryptoSelfTest();
-  const dotColor =
-    status === 'ok' ? colors.success : status === 'checking' ? colors.textMuted : colors.danger;
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.header}>
+        <Animated.View entering={enter(0)} style={styles.header}>
           <View style={{ flex: 1 }}>
             <Text style={[typography.body, { color: colors.textSecondary }]}>Hello</Text>
             <Text style={[typography.display, { color: colors.textPrimary }]} numberOfLines={1}>
               {name}
             </Text>
           </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Keluar"
-            hitSlop={8}
-            onPress={signOut}
-            style={({ pressed }) => [styles.iconButton, shadow.soft, pressed && { opacity: 0.6 }]}
-          >
+          <IconButton label="Kunci vault" onPress={lock}>
+            <Lock size={20} color={colors.textPrimary} />
+          </IconButton>
+          <IconButton label="Keluar" onPress={signOutAndForget}>
             <LogOut size={20} color={colors.textPrimary} />
-          </Pressable>
-        </View>
+          </IconButton>
+        </Animated.View>
 
-        {/* Status koneksi Supabase */}
-        <View style={[styles.status, shadow.soft]}>
-          <View style={[styles.dot, { backgroundColor: dotColor }]} />
-          <View style={{ flex: 1 }}>
-            <Text style={[typography.bodyMedium, styles.ink]}>{statusText[status]}</Text>
-            {!!message && (
-              <Text style={[typography.caption, { color: colors.textSecondary }]}>{message}</Text>
-            )}
-          </View>
-        </View>
-
-        {/* Tes enkripsi */}
-        <View style={[styles.status, shadow.soft]}>
-          <View style={{ flex: 1 }}>
-            <Text style={[typography.bodyMedium, styles.ink]}>Tes enkripsi AES-GCM</Text>
-            <Text style={[typography.caption, { color: colors.textSecondary }]}>
-              {cryptoTest.running ? 'Menurunkan kunci…' : (cryptoTest.result ?? 'Belum dites')}
-            </Text>
-          </View>
-          <Pressable
-            onPress={cryptoTest.run}
-            disabled={cryptoTest.running}
-            style={({ pressed }) => [styles.button, (pressed || cryptoTest.running) && { opacity: 0.6 }]}
+        <Animated.View entering={enter(60)}>
+          <LinearGradient
+            colors={gradients.card.colors}
+            start={gradients.card.start}
+            end={gradients.card.end}
+            style={[styles.teamCard, shadow.strong]}
           >
-            <Text style={[typography.label, { color: colors.textOnDark }]}>Tes</Text>
-          </Pressable>
-        </View>
+            <Text style={[typography.label, { color: colors.textOnDarkMuted }]}>TIM</Text>
+            <Text style={[typography.heading, { color: colors.textOnDark }]} numberOfLines={1}>
+              {workspace?.name}
+            </Text>
+            <View style={styles.badge}>
+              <Text style={[typography.label, { color: colors.textOnDark }]}>{isOwner ? 'Owner' : 'Anggota'}</Text>
+            </View>
+          </LinearGradient>
+        </Animated.View>
 
-        {/* Kartu gradient hitam */}
-        <LinearGradient
-          colors={gradients.card.colors}
-          start={gradients.card.start}
-          end={gradients.card.end}
-          style={[styles.darkCard, shadow.strong]}
-        >
-          <Text style={[typography.label, { color: colors.textOnDarkMuted }]}>KLIEN</Text>
-          <Text style={[typography.heading, { color: colors.textOnDark }]}>Toko Budi</Text>
-          <Text style={[typography.bodyMedium, { color: colors.textOnDark }]}>•••• •••• 8160</Text>
-        </LinearGradient>
+        {biometricAvailable && !biometricEnabled && (
+          <Animated.View entering={enter(120)} style={[styles.card, shadow.soft]}>
+            <Text style={[typography.title, { color: colors.textPrimary }]}>Buka vault lebih cepat</Text>
+            <Text style={[typography.caption, { color: colors.textSecondary }]}>
+              Aktifkan sidik jari / Face ID supaya tidak perlu mengetik passphrase setiap membuka app.
+            </Text>
+            <Button
+              title="Aktifkan biometrik"
+              variant="secondary"
+              onPress={enableBiometric}
+              icon={<Fingerprint size={18} color={colors.textPrimary} />}
+            />
+          </Animated.View>
+        )}
 
-        {/* Kartu putih + contoh skala tipografi */}
-        <View style={[styles.card, shadow.soft]}>
-          <Text style={[typography.heading, styles.ink]}>Heading — Sora 24</Text>
-          <Text style={[typography.subheading, styles.ink]}>Subheading — Sora 18</Text>
-          <Text style={[typography.title, styles.ink]}>Title — Jakarta 16</Text>
-          <Text style={[typography.body, styles.ink]}>Body — Jakarta Regular 15</Text>
-          <Text style={[typography.bodyMedium, styles.ink]}>Body Medium — Jakarta 15</Text>
-          <Text style={[typography.caption, { color: colors.textSecondary }]}>Caption — 13</Text>
-          <Text style={[typography.label, { color: colors.textMuted }]}>LABEL — 12</Text>
-        </View>
+        <Animated.View entering={enter(180)} style={[styles.card, styles.empty]}>
+          <Text style={[typography.subheading, { color: colors.textPrimary }]}>Vault masih kosong</Text>
+          <Text style={[typography.caption, { color: colors.textSecondary, textAlign: 'center' }]}>
+            Daftar klien & akun akan muncul di sini.
+          </Text>
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -158,25 +94,8 @@ export default function Index() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
-  container: { padding: spacing.lg, gap: spacing.lg },
-  ink: { color: colors.textPrimary },
-  darkCard: {
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    gap: spacing.xs,
-    marginTop: spacing.sm,
-  },
-  status: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  container: { padding: spacing.lg, gap: spacing.lg, width: '100%', maxWidth: 720, alignSelf: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   iconButton: {
     width: 44,
     height: 44,
@@ -185,18 +104,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  button: {
-    backgroundColor: colors.ink,
+  teamCard: { borderRadius: radius.lg, padding: spacing.lg, gap: spacing.xs, minHeight: 140, justifyContent: 'flex-end' },
+  badge: {
+    alignSelf: 'flex-start',
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 4,
     borderRadius: radius.full,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    backgroundColor: 'rgba(255,255,255,0.14)',
   },
-  dot: { width: 10, height: 10, borderRadius: radius.full },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    gap: spacing.sm,
-  },
+  card: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm },
+  empty: { alignItems: 'center', paddingVertical: spacing.xxl, borderWidth: 1, borderColor: colors.border, borderStyle: 'dashed', backgroundColor: 'transparent' },
 });
