@@ -33,7 +33,19 @@
           "imageWidth": 96
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": "Pewe memakai Face ID untuk membuka vault."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Pewe memakai Face ID untuk membuka vault."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
