@@ -1,4 +1,18 @@
 import {
+  BookOpenText,
+  Calendar,
+  Car,
+  Coffee,
+  Gamepad2,
+  Heart,
+  Hospital,
+  Landmark,
+  Music,
+  Package,
+  Plane,
+  Scissors,
+  Shirt,
+  Zap,
   Briefcase,
   Building2,
   Camera,
@@ -34,7 +48,7 @@ import { radius } from '@/theme';
 
 /**
  * Ikon yang bisa dipilih untuk kategori. Key disimpan di kolom categories.icon.
- * Jumlahnya 28 supaya grid pas penuh: 7 kolom di HP (4 baris), 14 kolom di tablet (2 baris).
+ * Jumlahnya 42 supaya grid pas penuh: 7 kolom di HP (6 baris), 14 kolom di tablet (3 baris).
  */
 export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   folder: Folder,
@@ -65,6 +79,20 @@ export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   'hard-drive': HardDrive,
   wifi: Wifi,
   camera: Camera,
+  scissors: Scissors,
+  shirt: Shirt,
+  menu: BookOpenText,
+  coffee: Coffee,
+  package: Package,
+  car: Car,
+  plane: Plane,
+  calendar: Calendar,
+  heart: Heart,
+  hospital: Hospital,
+  landmark: Landmark,
+  zap: Zap,
+  music: Music,
+  gamepad: Gamepad2,
 };
 
 export const CATEGORY_ICON_KEYS = Object.keys(CATEGORY_ICONS);

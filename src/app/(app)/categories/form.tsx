@@ -10,6 +10,9 @@ import { colors, radius, spacing, typography } from '@/theme';
 
 const ICON_GAP = spacing.sm;
 
+const chunk = <T,>(items: T[], size: number): T[][] =>
+  Array.from({ length: Math.ceil(items.length / size) }, (_, i) => items.slice(i * size, (i + 1) * size));
+
 /** Form tambah / edit kategori (tampil sebagai sheet dari bawah) */
 export default function CategoryFormScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -25,7 +28,7 @@ export default function CategoryFormScreen() {
   // Ukuran kotak ikon dihitung dari lebar form supaya tiap baris rata kiri-kanan
   const [gridWidth, setGridWidth] = useState(0);
   const iconColumns = gridWidth >= 560 ? 14 : 7;
-  const iconSize = gridWidth ? (gridWidth - ICON_GAP * (iconColumns - 1)) / iconColumns : 0;
+  const iconGlyph = Math.min(22, ((gridWidth - ICON_GAP * (iconColumns - 1)) / iconColumns) * 0.45);
 
   async function handleSave() {
     const trimmed = name.trim();
@@ -107,28 +110,33 @@ export default function CategoryFormScreen() {
 
       <View style={styles.section}>
         <Text style={[typography.label, styles.label]}>Ikon</Text>
-        <View style={[styles.wrap, { gap: ICON_GAP }]} onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}>
-          {iconSize > 0 &&
-            CATEGORY_ICON_KEYS.map((key) => {
-              const Icon = CATEGORY_ICONS[key];
-              const active = icon === key;
-              return (
-                <Pressable
-                  key={key}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: active }}
-                  accessibilityLabel={`Ikon ${key}`}
-                  onPress={() => setIcon(key)}
-                  style={[
-                    styles.iconOption,
-                    { width: iconSize, height: iconSize },
-                    active && { backgroundColor: colors.ink, borderColor: colors.ink },
-                  ]}
-                >
-                  <Icon size={Math.min(22, iconSize * 0.45)} color={active ? colors.textOnDark : colors.textPrimary} />
-                </Pressable>
-              );
-            })}
+        {/* Disusun per baris & tiap kotak flex:1, jadi selalu rata kiri-kanan dengan tombol di bawah */}
+        <View style={{ gap: ICON_GAP }} onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}>
+          {gridWidth > 0 &&
+            chunk(CATEGORY_ICON_KEYS, iconColumns).map((row, rowIndex) => (
+              <View key={rowIndex} style={[styles.iconRow, { gap: ICON_GAP }]}>
+                {row.map((key) => {
+                  const Icon = CATEGORY_ICONS[key];
+                  const active = icon === key;
+                  return (
+                    <Pressable
+                      key={key}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected: active }}
+                      accessibilityLabel={`Ikon ${key}`}
+                      onPress={() => setIcon(key)}
+                      style={[styles.iconOption, active && { backgroundColor: colors.ink, borderColor: colors.ink }]}
+                    >
+                      <Icon size={iconGlyph} color={active ? colors.textOnDark : colors.textPrimary} />
+                    </Pressable>
+                  );
+                })}
+                {/* Baris terakhir yang tidak penuh: isi kotak kosong supaya ukuran tetap sama */}
+                {Array.from({ length: iconColumns - row.length }, (_, i) => (
+                  <View key={`empty-${i}`} style={styles.iconSpacer} />
+                ))}
+              </View>
+            ))}
         </View>
       </View>
 
@@ -155,7 +163,11 @@ const styles = StyleSheet.create({
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   swatch: { width: 36, height: 36, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
   swatchActive: { borderWidth: 3, borderColor: colors.surface, outlineWidth: 2, outlineColor: colors.ink },
+  iconRow: { flexDirection: 'row' },
+  iconSpacer: { flex: 1, aspectRatio: 1 },
   iconOption: {
+    flex: 1,
+    aspectRatio: 1,
     borderRadius: radius.sm,
     borderWidth: 1,
     borderColor: colors.border,
