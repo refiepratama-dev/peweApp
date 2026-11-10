@@ -8,6 +8,8 @@ import { useCategories } from '@/features/categories/categories-provider';
 import { CATEGORY_COLORS, CATEGORY_ICON_KEYS, CATEGORY_ICONS, CategoryIcon } from '@/features/categories/icons';
 import { colors, radius, spacing, typography } from '@/theme';
 
+const ICON_GAP = spacing.sm;
+
 /** Form tambah / edit kategori (tampil sebagai sheet dari bawah) */
 export default function CategoryFormScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -19,6 +21,11 @@ export default function CategoryFormScreen() {
   const [icon, setIcon] = useState(existing?.icon ?? 'folder');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Ukuran kotak ikon dihitung dari lebar form supaya tiap baris rata kiri-kanan
+  const [gridWidth, setGridWidth] = useState(0);
+  const iconColumns = gridWidth >= 560 ? 14 : 7;
+  const iconSize = gridWidth ? (gridWidth - ICON_GAP * (iconColumns - 1)) / iconColumns : 0;
 
   async function handleSave() {
     const trimmed = name.trim();
@@ -39,25 +46,21 @@ export default function CategoryFormScreen() {
 
   function handleDelete() {
     if (!existing) return;
-    Alert.alert(
-      `Hapus "${existing.name}"?`,
-      'Entry di kategori ini tidak ikut terhapus, hanya jadi tanpa kategori.',
-      [
-        { text: 'Batal', style: 'cancel' },
-        {
-          text: 'Hapus',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await remove(existing.id);
-              router.back();
-            } catch (e) {
-              setError(e instanceof Error ? e.message : 'Gagal menghapus');
-            }
-          },
+    Alert.alert(`Hapus "${existing.name}"?`, 'Entry di kategori ini tidak ikut terhapus, hanya jadi tanpa kategori.', [
+      { text: 'Batal', style: 'cancel' },
+      {
+        text: 'Hapus',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await remove(existing.id);
+            router.back();
+          } catch (e) {
+            setError(e instanceof Error ? e.message : 'Gagal menghapus');
+          }
         },
-      ],
-    );
+      },
+    ]);
   }
 
   return (
@@ -104,23 +107,28 @@ export default function CategoryFormScreen() {
 
       <View style={styles.section}>
         <Text style={[typography.label, styles.label]}>Ikon</Text>
-        <View style={styles.wrap}>
-          {CATEGORY_ICON_KEYS.map((key) => {
-            const Icon = CATEGORY_ICONS[key];
-            const active = icon === key;
-            return (
-              <Pressable
-                key={key}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: active }}
-                accessibilityLabel={`Ikon ${key}`}
-                onPress={() => setIcon(key)}
-                style={[styles.iconOption, active && { backgroundColor: colors.ink, borderColor: colors.ink }]}
-              >
-                <Icon size={20} color={active ? colors.textOnDark : colors.textPrimary} />
-              </Pressable>
-            );
-          })}
+        <View style={[styles.wrap, { gap: ICON_GAP }]} onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}>
+          {iconSize > 0 &&
+            CATEGORY_ICON_KEYS.map((key) => {
+              const Icon = CATEGORY_ICONS[key];
+              const active = icon === key;
+              return (
+                <Pressable
+                  key={key}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={`Ikon ${key}`}
+                  onPress={() => setIcon(key)}
+                  style={[
+                    styles.iconOption,
+                    { width: iconSize, height: iconSize },
+                    active && { backgroundColor: colors.ink, borderColor: colors.ink },
+                  ]}
+                >
+                  <Icon size={Math.min(22, iconSize * 0.45)} color={active ? colors.textOnDark : colors.textPrimary} />
+                </Pressable>
+              );
+            })}
         </View>
       </View>
 
@@ -148,8 +156,6 @@ const styles = StyleSheet.create({
   swatch: { width: 36, height: 36, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
   swatchActive: { borderWidth: 3, borderColor: colors.surface, outlineWidth: 2, outlineColor: colors.ink },
   iconOption: {
-    width: 48,
-    height: 48,
     borderRadius: radius.sm,
     borderWidth: 1,
     borderColor: colors.border,

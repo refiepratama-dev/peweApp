@@ -1,5 +1,19 @@
 import {
   Briefcase,
+  Building2,
+  Camera,
+  GraduationCap,
+  HardDrive,
+  House,
+  Laptop,
+  Megaphone,
+  Monitor,
+  Receipt,
+  ShoppingCart,
+  Truck,
+  Utensils,
+  Wallet,
+  Wifi,
   Cloud,
   Code,
   CreditCard,
@@ -18,7 +32,10 @@ import {
 import { StyleSheet, View } from 'react-native';
 import { radius } from '@/theme';
 
-/** Ikon yang bisa dipilih untuk kategori. Key disimpan di kolom categories.icon */
+/**
+ * Ikon yang bisa dipilih untuk kategori. Key disimpan di kolom categories.icon.
+ * Jumlahnya 28 supaya grid pas penuh: 7 kolom di HP (4 baris), 14 kolom di tablet (2 baris).
+ */
 export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   folder: Folder,
   briefcase: Briefcase,
@@ -34,6 +51,20 @@ export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   shield: Shield,
   'credit-card': CreditCard,
   users: Users,
+  building: Building2,
+  'shopping-cart': ShoppingCart,
+  wallet: Wallet,
+  receipt: Receipt,
+  megaphone: Megaphone,
+  truck: Truck,
+  utensils: Utensils,
+  'graduation-cap': GraduationCap,
+  house: House,
+  monitor: Monitor,
+  laptop: Laptop,
+  'hard-drive': HardDrive,
+  wifi: Wifi,
+  camera: Camera,
 };
 
 export const CATEGORY_ICON_KEYS = Object.keys(CATEGORY_ICONS);
@@ -48,6 +79,10 @@ export const CATEGORY_COLORS = [
   '#F59E0B',
   '#EF4444',
   '#EC4899',
+  '#8B5CF6',
+  '#14B8A6',
+  '#84CC16',
+  '#F97316',
 ] as const;
 
 type CategoryIconProps = { icon: string; color: string; size?: number };
