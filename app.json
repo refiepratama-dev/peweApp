@@ -52,7 +52,8 @@
           "photosPermission": "Pewe butuh akses foto untuk melampirkan gambar ke entry.",
           "cameraPermission": "Pewe butuh kamera untuk memotret dokumen / layar dan melampirkannya ke entry."
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,5 +1,5 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { FileText, Pencil, Trash2 } from 'lucide-react-native';
+import { Pencil, Trash2 } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -17,6 +17,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { Button } from '@/components/ui/button';
 import { useCategories } from '@/features/categories/categories-provider';
 import { CategoryIcon } from '@/features/categories/icons';
+import { DocumentsSection } from '@/features/documents/documents-section';
 import { deleteEntry, getEntry, type EntryDetail } from '@/features/entries/entries-api';
 import { FieldRow } from '@/features/entries/field-row';
 import { ImagesSection } from '@/features/images/images-section';
@@ -36,18 +37,6 @@ function HeaderIcon({ label, onPress, children }: { label: string; onPress: () =
     >
       {children}
     </Pressable>
-  );
-}
-
-function ComingSoon({ icon, title }: { icon: React.ReactNode; title: string }) {
-  return (
-    <View style={styles.section}>
-      <Text style={[typography.subheading, { color: colors.textPrimary }]}>{title}</Text>
-      <View style={styles.placeholder}>
-        {icon}
-        <Text style={[typography.caption, { color: colors.textSecondary }]}>Menyusul di tahap berikutnya</Text>
-      </View>
-    </View>
   );
 }
 
@@ -153,7 +142,7 @@ export default function EntryDetailScreen() {
         </View>
       )}
       <ImagesSection entryId={entry.id} />
-      <ComingSoon title="Dokumen" icon={<FileText size={22} color={colors.textMuted} />} />
+      <DocumentsSection entryId={entry.id} />
     </Animated.View>
   );
 
@@ -217,13 +206,4 @@ const styles = StyleSheet.create({
   section: { gap: spacing.sm },
   card: { backgroundColor: colors.surface, borderRadius: radius.lg, paddingHorizontal: spacing.lg },
   divider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  placeholder: {
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.xl,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: colors.border,
-  },
 });

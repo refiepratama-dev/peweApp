@@ -4,6 +4,7 @@ import { AppState } from 'react-native';
 import { clearImageCache } from '@/features/images/images-api';
 import { useAuth } from '@/lib/auth/auth-provider';
 import { vaultCrypto } from '@/lib/crypto';
+import { clearDecryptedFiles } from '@/lib/storage/decrypted-files';
 import { supabase } from '@/lib/supabase';
 import { canUseBiometric, clearDataKey, isBiometricEnabled, loadDataKey, saveDataKey } from './key-storage';
 
@@ -84,6 +85,11 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     if (userId) refresh();
   }, [userId, refresh]);
 
+  // Sisa file dokumen yang didekripsi dari sesi sebelumnya dibersihkan saat app dibuka
+  useEffect(() => {
+    clearDecryptedFiles();
+  }, []);
+
   const createWorkspace = useCallback(
     async (name: string, passphrase: string) => {
       const keys = await vaultCrypto.createWorkspaceKeys(passphrase);
@@ -143,6 +149,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
 
   const lock = useCallback(() => {
     clearImageCache();
+    clearDecryptedFiles();
     setDataKey(null);
     setStatus((s) => (s === 'unlocked' ? 'locked' : s));
   }, []);
@@ -150,6 +157,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   const signOutAndForget = useCallback(async () => {
     if (workspace) await clearDataKey(workspace.id);
     clearImageCache();
+    clearDecryptedFiles();
     setDataKey(null);
     await signOut();
   }, [workspace, signOut]);
