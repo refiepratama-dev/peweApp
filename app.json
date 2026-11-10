@@ -76,6 +76,17 @@
         "projectId": "023549da-11d3-48b1-b1e7-d708722ddc9d"
       }
     },
-    "owner": "refie"
+    "owner": "refie",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/023549da-11d3-48b1-b1e7-d708722ddc9d",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0,
+      "requestHeaders": {
+        "expo-channel-name": "preview"
+      }
+    }
   }
 }

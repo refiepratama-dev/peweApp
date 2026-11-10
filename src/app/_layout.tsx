@@ -18,6 +18,7 @@ import {
   PlusJakartaSans_700Bold,
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { AuthProvider, useAuth } from '@/lib/auth/auth-provider';
+import { useOtaUpdate } from '@/lib/use-ota-update';
 import { colors } from '@/theme';
 
 // Tahan splash screen sampai font selesai dimuat
@@ -49,6 +50,7 @@ export default function RootLayout() {
 // Pengalihan login/belum login diatur di _layout masing-masing grup: (app) dan (auth)
 function RootNavigator() {
   const { loading } = useAuth();
+  useOtaUpdate();
 
   useEffect(() => {
     if (!loading) SplashScreen.hideAsync();
