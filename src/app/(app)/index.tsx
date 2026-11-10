@@ -1,7 +1,7 @@
 // Beranda: info tim, kategori, pencarian & daftar entry
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect } from 'expo-router';
-import { ChevronRight, Fingerprint, Lock, LogOut, Plus, Search, Tag } from 'lucide-react-native';
+import { ChevronRight, Fingerprint, Lock, Plus, Search, Tag, UserRound } from 'lucide-react-native';
 import { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
@@ -43,8 +43,7 @@ function IconButton({ label, onPress, children }: { label: string; onPress: () =
 
 export default function Home() {
   const { session } = useAuth();
-  const { workspace, isOwner, lock, signOutAndForget, biometricAvailable, biometricEnabled, enableBiometric } =
-    useVault();
+  const { workspace, isOwner, lock, biometricAvailable, biometricEnabled, enableBiometric } = useVault();
   const { categories } = useCategories();
   const { width } = useWindowDimensions();
   const columns = width >= 900 ? 2 : 1;
@@ -98,15 +97,15 @@ export default function Home() {
       <Animated.View entering={enter(0)} style={styles.header}>
         <View style={{ flex: 1 }}>
           <Text style={[typography.body, { color: colors.textSecondary }]}>Hello</Text>
-          <Text style={[typography.display, { color: colors.textPrimary }]} numberOfLines={1}>
+          <Text style={[typography.heading, { color: colors.textPrimary }]} numberOfLines={1}>
             {name}
           </Text>
         </View>
         <IconButton label="Kunci vault" onPress={lock}>
           <Lock size={20} color={colors.textPrimary} />
         </IconButton>
-        <IconButton label="Keluar" onPress={signOutAndForget}>
-          <LogOut size={20} color={colors.textPrimary} />
+        <IconButton label="Profil" onPress={() => router.push('/profile')}>
+          <UserRound size={20} color={colors.textPrimary} />
         </IconButton>
       </Animated.View>
 

@@ -34,6 +34,7 @@ type VaultContextValue = {
   unlock: (passphrase: string, remember?: boolean) => Promise<void>;
   unlockWithBiometric: () => Promise<boolean>;
   enableBiometric: () => Promise<void>;
+  disableBiometric: () => Promise<void>;
   lock: () => void;
   /** Owner: ganti passphrase tim. Data tidak perlu dienkripsi ulang (hanya kunci dibungkus ulang). */
   changePassphrase: (newPassphrase: string) => Promise<void>;
@@ -152,6 +153,12 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     setBiometricEnabled(true);
   }, [workspace, dataKey]);
 
+  const disableBiometric = useCallback(async () => {
+    if (!workspace) return;
+    await clearDataKey(workspace.id);
+    setBiometricEnabled(false);
+  }, [workspace]);
+
   const lock = useCallback(() => {
     clearImageCache();
     clearDecryptedFiles();
@@ -218,6 +225,7 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         unlock,
         unlockWithBiometric,
         enableBiometric,
+        disableBiometric,
         lock,
         changePassphrase,
         leaveWorkspace,

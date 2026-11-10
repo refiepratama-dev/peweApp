@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Avatar } from '@/components/avatar';
 import { ScreenHeader } from '@/components/screen-header';
 import { Button } from '@/components/ui/button';
 import { TextField } from '@/components/ui/text-field';
@@ -14,21 +15,6 @@ import { colors, radius, shadow, spacing, typography } from '@/theme';
 
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 const enter = (delay: number) => FadeInDown.duration(350).delay(delay).easing(Easing.out(Easing.cubic));
-
-function Avatar({ name }: { name: string }) {
-  const initials =
-    name
-      .split(/[\s@._-]+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((w) => w[0]?.toUpperCase())
-      .join('') || '?';
-  return (
-    <View style={styles.avatar}>
-      <Text style={[typography.label, { color: colors.textOnDark }]}>{initials}</Text>
-    </View>
-  );
-}
 
 export default function TeamScreen() {
   const { session } = useAuth();
@@ -106,20 +92,24 @@ export default function TeamScreen() {
   }
 
   function handleLeave() {
-    Alert.alert(`Keluar dari ${workspace?.name}?`, 'Kamu tidak bisa lagi mengakses data tim ini sampai owner menambahkanmu lagi.', [
-      { text: 'Batal', style: 'cancel' },
-      {
-        text: 'Keluar',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await leaveWorkspace();
-          } catch (e) {
-            Alert.alert('Gagal keluar', e instanceof Error ? e.message : 'Coba lagi');
-          }
+    Alert.alert(
+      `Keluar dari ${workspace?.name}?`,
+      'Kamu tidak bisa lagi mengakses data tim ini sampai owner menambahkanmu lagi.',
+      [
+        { text: 'Batal', style: 'cancel' },
+        {
+          text: 'Keluar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await leaveWorkspace();
+            } catch (e) {
+              Alert.alert('Gagal keluar', e instanceof Error ? e.message : 'Coba lagi');
+            }
+          },
         },
-      },
-    ]);
+      ],
+    );
   }
 
   return (
@@ -248,15 +238,12 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.md },
   member: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md },
   divider: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
-  avatar: {
-    width: 40,
-    height: 40,
+  badge: {
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 4,
     borderRadius: radius.full,
     backgroundColor: colors.ink,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
-  badge: { paddingHorizontal: spacing.sm + 2, paddingVertical: 4, borderRadius: radius.full, backgroundColor: colors.ink },
   remove: {
     width: 36,
     height: 36,
