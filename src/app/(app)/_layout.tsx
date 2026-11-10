@@ -31,6 +31,16 @@ export default function AppLayout() {
                 animation: 'slide_from_bottom',
               }}
             />
+            <Stack.Screen
+              name="team/passphrase"
+              options={{
+                presentation: 'formSheet',
+                sheetAllowedDetents: [0.75, 1],
+                sheetGrabberVisible: true,
+                sheetCornerRadius: 28,
+                animation: 'slide_from_bottom',
+              }}
+            />
           </Stack>
         </CategoriesProvider>
       </VaultGate>

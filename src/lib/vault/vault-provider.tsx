@@ -2,6 +2,7 @@ import { randomUUID } from 'expo-crypto';
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AppState } from 'react-native';
 import { clearImageCache } from '@/features/images/images-api';
+import { removeMember } from '@/features/team/team-api';
 import { useAuth } from '@/lib/auth/auth-provider';
 import { vaultCrypto } from '@/lib/crypto';
 import { clearDecryptedFiles } from '@/lib/storage/decrypted-files';
@@ -34,6 +35,10 @@ type VaultContextValue = {
   unlockWithBiometric: () => Promise<boolean>;
   enableBiometric: () => Promise<void>;
   lock: () => void;
+  /** Owner: ganti passphrase tim. Data tidak perlu dienkripsi ulang (hanya kunci dibungkus ulang). */
+  changePassphrase: (newPassphrase: string) => Promise<void>;
+  /** Anggota: keluar dari tim */
+  leaveWorkspace: () => Promise<void>;
   /** Hapus kunci tersimpan di HP ini lalu keluar akun */
   signOutAndForget: () => Promise<void>;
 };
@@ -154,6 +159,29 @@ export function VaultProvider({ children }: { children: ReactNode }) {
     setStatus((s) => (s === 'unlocked' ? 'locked' : s));
   }, []);
 
+  const changePassphrase = useCallback(
+    async (newPassphrase: string) => {
+      if (!workspace || !dataKey) throw new Error('Vault belum terbuka');
+      const { kdfSalt, wrappedKey } = await vaultCrypto.rewrapDataKey(dataKey, newPassphrase);
+      const { error: err } = await supabase
+        .from('workspaces')
+        .update({ kdf_salt: kdfSalt, wrapped_key: wrappedKey })
+        .eq('id', workspace.id);
+      if (err) throw new Error(err.message);
+      setWorkspace({ ...workspace, kdf_salt: kdfSalt, wrapped_key: wrappedKey });
+    },
+    [workspace, dataKey],
+  );
+
+  const leaveWorkspace = useCallback(async () => {
+    if (!workspace || !userId) return;
+    await removeMember(workspace.id, userId);
+    await clearDataKey(workspace.id);
+    clearImageCache();
+    clearDecryptedFiles();
+    await refresh();
+  }, [workspace, userId, refresh]);
+
   const signOutAndForget = useCallback(async () => {
     if (workspace) await clearDataKey(workspace.id);
     clearImageCache();
@@ -191,6 +219,8 @@ export function VaultProvider({ children }: { children: ReactNode }) {
         unlockWithBiometric,
         enableBiometric,
         lock,
+        changePassphrase,
+        leaveWorkspace,
         signOutAndForget,
       }}
     >
