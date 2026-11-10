@@ -1,5 +1,5 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { FileText, Image as ImageIcon, Pencil, Trash2 } from 'lucide-react-native';
+import { FileText, Pencil, Trash2 } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
@@ -19,6 +19,7 @@ import { useCategories } from '@/features/categories/categories-provider';
 import { CategoryIcon } from '@/features/categories/icons';
 import { deleteEntry, getEntry, type EntryDetail } from '@/features/entries/entries-api';
 import { FieldRow } from '@/features/entries/field-row';
+import { ImagesSection } from '@/features/images/images-section';
 import { useVault } from '@/lib/vault/vault-provider';
 import { colors, radius, shadow, spacing, typography } from '@/theme';
 
@@ -77,7 +78,7 @@ export default function EntryDetailScreen() {
 
   function handleDelete() {
     if (!entry) return;
-    Alert.alert(`Hapus "${entry.title}"?`, 'Semua field di entry ini ikut terhapus dan tidak bisa dikembalikan.', [
+    Alert.alert(`Hapus "${entry.title}"?`, 'Semua field, gambar & dokumen di entry ini ikut terhapus dan tidak bisa dikembalikan.', [
       { text: 'Batal', style: 'cancel' },
       {
         text: 'Hapus',
@@ -151,7 +152,7 @@ export default function EntryDetailScreen() {
           </View>
         </View>
       )}
-      <ComingSoon title="Gambar" icon={<ImageIcon size={22} color={colors.textMuted} />} />
+      <ImagesSection entryId={entry.id} />
       <ComingSoon title="Dokumen" icon={<FileText size={22} color={colors.textMuted} />} />
     </Animated.View>
   );

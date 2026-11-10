@@ -1,6 +1,7 @@
 import { randomUUID } from 'expo-crypto';
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AppState } from 'react-native';
+import { clearImageCache } from '@/features/images/images-api';
 import { useAuth } from '@/lib/auth/auth-provider';
 import { vaultCrypto } from '@/lib/crypto';
 import { supabase } from '@/lib/supabase';
@@ -141,12 +142,14 @@ export function VaultProvider({ children }: { children: ReactNode }) {
   }, [workspace, dataKey]);
 
   const lock = useCallback(() => {
+    clearImageCache();
     setDataKey(null);
     setStatus((s) => (s === 'unlocked' ? 'locked' : s));
   }, []);
 
   const signOutAndForget = useCallback(async () => {
     if (workspace) await clearDataKey(workspace.id);
+    clearImageCache();
     setDataKey(null);
     await signOut();
   }, [workspace, signOut]);

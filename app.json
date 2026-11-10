@@ -45,6 +45,13 @@
         {
           "faceIDPermission": "Pewe memakai Face ID untuk membuka vault."
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Pewe butuh akses foto untuk melampirkan gambar ke entry.",
+          "cameraPermission": "Pewe butuh kamera untuk memotret dokumen / layar dan melampirkannya ke entry."
+        }
       ]
     ],
     "experiments": {

@@ -1,6 +1,7 @@
 // Akses data entry & field. Nilai field dan catatan dienkripsi di HP sebelum dikirim.
 import { randomUUID } from 'expo-crypto';
 import { vaultCrypto } from '@/lib/crypto';
+import { removeStored } from '@/lib/storage/encrypted-storage';
 import { supabase } from '@/lib/supabase';
 import type { FieldType } from './field-types';
 
@@ -142,7 +143,15 @@ export async function saveEntry(
 }
 
 export async function deleteEntry(id: string): Promise<void> {
-  // Field ikut terhapus (ON DELETE CASCADE)
+  // File di Storage tidak ikut terhapus oleh database, jadi dihapus dulu di sini
+  const [images, documents] = await Promise.all([
+    supabase.from('images').select('storage_path').eq('entry_id', id),
+    supabase.from('documents').select('storage_path').eq('entry_id', id),
+  ]);
+  const paths = [...(images.data ?? []), ...(documents.data ?? [])].map((r) => r.storage_path as string);
+  await removeStored(paths);
+
+  // Field, gambar & dokumen (baris database) ikut terhapus lewat ON DELETE CASCADE
   const { error } = await supabase.from('entries').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }
