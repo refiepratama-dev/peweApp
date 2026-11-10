@@ -40,7 +40,16 @@ function SmallIcon({
   );
 }
 
-/** Kartu edit satu field: tipe, label, nilai, rahasia, urutan & hapus */
+const FIELD_PLACEHOLDER: Record<FieldType, string> = {
+  text: 'Isi teks',
+  email: 'nama@email.com',
+  password: 'Isi password',
+  url: 'https://…',
+  key: 'Tempel key / token',
+  note: 'Tulis catatan…',
+};
+
+/** Kartu edit satu field: tipe, label, isi, rahasia, urutan & hapus */
 export function FieldEditor({ field, error, isFirst, isLast, onChange, onMove, onRemove }: FieldEditorProps) {
   const meta = FIELD_TYPES[field.type];
 
@@ -87,8 +96,8 @@ export function FieldEditor({ field, error, isFirst, isLast, onChange, onMove, o
         autoCapitalize="sentences"
       />
       <TextField
-        label="Nilai"
-        placeholder={meta.multiline ? 'Tulis catatan…' : 'Isi nilai'}
+        label="Isi"
+        placeholder={meta.multiline ? 'Tulis catatan…' : FIELD_PLACEHOLDER[field.type]}
         value={field.value}
         onChangeText={(value) => onChange({ value })}
         secret={field.is_secret && !meta.multiline}
@@ -107,7 +116,7 @@ export function FieldEditor({ field, error, isFirst, isLast, onChange, onMove, o
             thumbColor={colors.surface}
             ios_backgroundColor={colors.border}
           />
-          <Text style={[typography.caption, { color: colors.textSecondary }]}>Sembunyikan nilai</Text>
+          <Text style={[typography.caption, { color: colors.textSecondary }]}>Sembunyikan isi</Text>
         </View>
         <View style={styles.tools}>
           <SmallIcon label="Pindah ke atas" disabled={isFirst} onPress={() => onMove(-1)}>
