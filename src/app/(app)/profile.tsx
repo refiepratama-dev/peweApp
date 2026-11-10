@@ -1,3 +1,5 @@
+import Constants from 'expo-constants';
+import * as Updates from 'expo-updates';
 import { Fingerprint, Lock, LogOut, Save, User } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
@@ -12,6 +14,18 @@ import { authErrorMessage } from '@/lib/auth/errors';
 import { supabase } from '@/lib/supabase';
 import { useVault } from '@/lib/vault/vault-provider';
 import { colors, radius, shadow, spacing, typography } from '@/theme';
+
+function appVersionLabel() {
+  const version = Constants.expoConfig?.version ?? '';
+  if (!Updates.isEnabled || Updates.isEmbeddedLaunch || !Updates.createdAt) return `Pewe v${version}`;
+  const date = Updates.createdAt.toLocaleString('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return `Pewe v${version} · update ${date}`;
+}
 
 const enter = (delay: number) => FadeInDown.duration(350).delay(delay).easing(Easing.out(Easing.cubic));
 
@@ -207,6 +221,7 @@ export default function ProfileScreen() {
               onPress={handleSignOut}
               icon={<LogOut size={18} color={colors.danger} />}
             />
+            <Text style={[typography.caption, styles.version]}>{appVersionLabel()}</Text>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -227,5 +242,6 @@ const styles = StyleSheet.create({
   },
   identity: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
   card: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.md },
+  version: { color: colors.textMuted, textAlign: 'center', marginTop: spacing.sm },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
 });
